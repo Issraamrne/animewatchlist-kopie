@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>✧ Anime Watchlist - Login ✧</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="login-container">
+  <h1 class="logo-title"><span>&lt;</span> Cyber Access <span>&gt;</span></h1>
+  <p class="sub">Log in to your Anime Watchlist account to manage your list.</p>
+
+  <div class="login-card">
+    <div class="auth-tabs" role="tablist">
+      <button type="button" class="tab-btn active" id="tab-login" onclick="switchTab('login')">Inloggen</button>
+      <button type="button" class="tab-btn" id="tab-register" onclick="switchTab('register')">Registreren</button>
+    </div>
+
+    <div id="authAlert" class="auth-alert"></div>
+
+    <!-- Login Formulier -->
+    <form id="loginForm" class="auth-form active" onsubmit="handleAuth(event, 'login')">
+      <div class="form-group">
+        <label for="login-email">Username or Email</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="login-email" placeholder="Enter your username or email..." required autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="login-password">Wachtwoord</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+      </div>
+
+      <button type="submit" class="cyber-btn main-btn">
+        <span>Login ➔</span>
+      </button>
+    </form>
+
+    <!-- Registratie Formulier -->
+    <form id="registerForm" class="auth-form" onsubmit="handleAuth(event, 'register')">
+      <div class="form-group">
+        <label for="reg-username">Username</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input type="text" id="reg-username" placeholder="Choose a unique username..." required autocomplete="username">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="reg-email">Email Address</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉</span>
+          <input type="email" id="reg-email" placeholder="name@example.com" required autocomplete="email">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="reg-password">Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="reg-password" placeholder="At least 8 characters" required minlength="8" autocomplete="new-password">
+        </div>
+      </div>
+
+      <button type="submit" class="cyber-btn main-btn">
+        <span>Create Account ➔</span>
+      </button>
+    </form>
+  </div>
+</main>
+
+<script>
+  function switchTab(mode) {
+    document.querySelectorAll('.tab-btn').forEach(function(btn) { btn.classList.remove('active'); });
+    document.querySelectorAll('.auth-form').forEach(function(form) { form.classList.remove('active'); });
+    
+    var activeTab = document.getElementById('tab-' + mode);
+    var activeForm = document.getElementById(mode + 'Form');
+    if (activeTab) activeTab.classList.add('active');
+    if (activeForm) activeForm.classList.add('active');
+    
+    var alertBox = document.getElementById('authAlert');
+    if (alertBox) alertBox.style.display = 'none';
+  }
+
+  function handleAuth(e, type) {
+    e.preventDefault();
+    var alertBox = document.getElementById('authAlert');
+
+    if (type === 'register') {
+      var username = document.getElementById('reg-username').value.trim();
+      var email = document.getElementById('reg-email').value.trim();
+      var password = document.getElementById('reg-password').value;
+
+      fetch('http://localhost:3000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password })
+      })
+      .then(res => res.json().then(data => ({ status: res.status, body: data })))
+      .then(result => {
+        if (result.status !== 200) {
+          alertBox.className = 'auth-alert info';
+          alertBox.textContent = result.body.error || 'Er is iets misgegaan.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        alertBox.className = 'auth-alert success';
+        alertBox.textContent = 'Account succesvol aangemaakt! Je wordt doorgestuurd...';
+        alertBox.style.display = 'block';
+
+        localStorage.setItem('currentUser', JSON.stringify(result.body.user));
+        setTimeout(function() { window.location.href = 'index.html'; }, 1000);
+      })
+      .catch(err => console.error('Fout:', err));
+
+    } else if (type === 'login') {
+      var identifier = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+
+      fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier, password })
+      })
+      .then(res => res.json().then(data => ({ status: res.status, body: data })))
+      .then(result => {
+        if (result.status !== 200) {
+          alertBox.className = 'auth-alert info';
+          alertBox.textContent = result.body.error || 'Ongeldige inloggegevens.';
+          alertBox.style.display = 'block';
+          return;
+        }
+
+        alertBox.className = 'auth-alert success';
+        alertBox.textContent = 'Welkom terug! Je wordt doorgestuurd...';
+        alertBox.style.display = 'block';
+
+        localStorage.setItem('currentUser', JSON.stringify(result.body.user));
+        setTimeout(function() { window.location.href = 'index.html'; }, 1000);
+      })
+      .catch(err => console.error('Fout:', err));
+    }
+  }
+</script>
+
+</body>
+</html>
